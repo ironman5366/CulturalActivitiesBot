@@ -1,14 +1,25 @@
 # External imports
 import slack
+import spacy
+import requests
 
 # Builtin imports
 import os
 import json
 import random
+import sys
+
+print("Loading spacy...")
+nlp = spacy.load('en_core_web_lg')
+print("Spacy loaded...")
+
+TERM_UPDATE_URL = "https://willbeddow.com/app/hoc-slackbot"
 
 CONF_FILE_NAME = "conf.json"
 
-assert os.path.isfile(CONF_FILE_NAME)
+if not os.path.isfile(CONF_FILE_NAME):
+    print("Configuration file not found, please run setup.sh")
+    sys.exit()
 
 CONF_DATA = json.load(open(CONF_FILE_NAME, encoding="utf-8"))
 
@@ -21,11 +32,7 @@ def reject_hopes(**payload):
     web_client = payload['web_client']
     if any([c in data["text"].lower() for c in ["cultural activities", "cultural allowance", "cultural activity"]]):
         channel_id = data['channel']
-        thread_ts = data['ts']
-        user = data['user']
-        responses = ["Nope!", "The answer is a definitive no!", "In your dreams", "hahahahahahahah no.", "Really?",
-                     "No.", "Thanks for reaching out! Not a chance!",
-                     "How could you even *think* about bothering me about this? I'm unfathomably busy"]
+        responses = requests.get(TERM_UPDATE_URL).json()["updates"]["terms"]
         web_client.chat_postMessage(
             channel=channel_id,
             text=random.choice(responses)
